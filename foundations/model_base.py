@@ -136,10 +136,16 @@ class ModelBase(object):
                activation=None,
                use_bias=True,
                kernel_initializer=None):
-        """Mimics tf.COnv2D but masks weights and uses presets as necessary."""
+        """Mimics tf.Conv2D but masks weights and uses presets as necessary."""
         # If there is a preset for this layer, use it.
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
+
+        if inputs.ndim == 2:
+            inputs = inputs.reshape(inputs.shape[0], inputs.shape[1], 1)
+        elif inputs.ndim > 3:
+            print("Error: input image dim greater than 3")
+            exit()
 
         # Create the weights.
         weights = tf.get_variable(
@@ -158,11 +164,14 @@ class ModelBase(object):
             weights = tf.multiply(weights, mask)
 
         self._weights[name] = weights
+        print(weights.dtype)
+        print(inputs.dtype)
+
 
         # Compute the output
         output_shape = (math.floor((inputs.shape[0] - kernel_size[0] + 1) / strides),
                         math.floor((inputs.shape[1] - kernel_size[1] + 1) / strides), filters)
-        output = tf.placeholder(dtype=tf.float32, shape=output_shape)
+        output = tf.placeholder(dtype=tf.float64, shape=output_shape)
         for f in range(filters):
             for x in range(math.floor((inputs.shape[0] - kernel_size[0]) / strides)):
                 for y in range(math.floor((inputs.shape[1] - kernel_size[1]) / strides)):
