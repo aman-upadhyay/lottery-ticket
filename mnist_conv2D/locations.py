@@ -1,4 +1,4 @@
-"""Root locations for fully-connected MNIST experiments."""
+"""Root locations for Conv2D MNIST experiments."""
 
 from __future__ import absolute_import
 from __future__ import division

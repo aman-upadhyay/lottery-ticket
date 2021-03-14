@@ -130,8 +130,8 @@ class ModelBase(object):
     def conv2D(self,
                name,
                inputs,
-               filters,
                kernel_size,
+               filters,
                strides=1,
                activation=None,
                use_bias=True,
@@ -189,6 +189,13 @@ class ModelBase(object):
             return activation(output)
         else:
             return output
+
+    def flatten(self,
+                inputs):
+        """Mimics tf.Flatten"""
+        output = tf.reshape(inputs, [-1])
+
+        return output
 
     def create_loss_and_accuracy(self, label_placeholder, output_logits):
         """Creates loss and accuracy once a child class has created the network."""

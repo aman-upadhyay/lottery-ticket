@@ -1,17 +1,3 @@
-# Copyright (C) 2018 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """The lottery ticket experiment for Lenet 300-100 trained on MNIST."""
 
 from __future__ import absolute_import
@@ -37,7 +23,7 @@ def train(output_dir,
           presets=None,
           permute_labels=False,
           train_order_seed=None):
-  """Perform the lottery ticket experiment.
+    """Perform the lottery ticket experiment.
 
   The output of each experiment will be stored in a directory called:
   {output_dir}/{pruning level}/{experiment_name} as defined in the
@@ -64,46 +50,44 @@ def train(output_dir,
       to the network.
   """
 
-  make_model = functools.partial(model_fc.ModelFc, constants.HYPERPARAMETERS)
+    make_model = functools.partial(model_fc.ModelFc, constants.HYPERPARAMETERS)
 
+    # Define model and dataset functions.
+    def make_dataset():
+        return dataset_mnist.DatasetMnist(
+            mnist_location,
+            permute_labels=permute_labels,
+            train_order_seed=train_order_seed)
 
-  # Define model and dataset functions.
-  def make_dataset():
-    return dataset_mnist.DatasetMnist(
-        mnist_location,
-        permute_labels=permute_labels,
-        train_order_seed=train_order_seed)
+    # Define a training function.
+    def train_model(sess, level, dataset, model):
+        params = {
+            'test_interval': 100,
+            'save_summaries': True,
+            'save_network': True,
+        }
 
+        return trainer.train(
+            sess,
+            dataset,
+            model,
+            constants.OPTIMIZER_FN,
+            training_len,
+            output_dir=paths.run(output_dir, level, experiment_name),
+            **params)
 
+    # Define a pruning function.
+    prune_masks = functools.partial(pruning.prune_by_percent,
+                                    constants.PRUNE_PERCENTS)
 
-  # Define a training function.
-  def train_model(sess, level, dataset, model):
-    params = {
-        'test_interval': 100,
-        'save_summaries': True,
-        'save_network': True,
-    }
+    # Run the experiment.
+    experiment.experiment(
+        make_dataset,
+        make_model,
+        train_model,
+        prune_masks,
+        iterations,
+        presets=save_restore.standardize(presets))
 
-    return trainer.train(
-        sess,
-        dataset,
-        model,
-        constants.OPTIMIZER_FN,
-        training_len,
-        output_dir=paths.run(output_dir, level, experiment_name),
-        **params)
-
-  # Define a pruning function.
-  prune_masks = functools.partial(pruning.prune_by_percent,
-                                  constants.PRUNE_PERCENTS)
-
-  # Run the experiment.
-  experiment.experiment(
-      make_dataset,
-      make_model,
-      train_model,
-      prune_masks,
-      iterations,
-      presets=save_restore.standardize(presets))
 
 train(constants.trial(1))

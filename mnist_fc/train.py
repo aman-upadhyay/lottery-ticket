@@ -1,17 +1,3 @@
-# Copyright (C) 2018 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """Train the Lenet 300-100 model on MNIST.
 
 Optionally initialize from saved initializations and masks.
@@ -36,7 +22,7 @@ def train(output_dir,
           masks=None,
           presets=None,
           train_order_seed=None):
-  """Train the MNIST model, possibly with presets and masks.
+    """Train the MNIST model, possibly with presets and masks.
 
   Args:
     output_dir: The directory to which to write model logs and output.
@@ -62,18 +48,18 @@ def train(output_dir,
       order in which training examples are shuffled before being presented
       to the network.
   """
-  # Retrieve previous information, if any.
-  masks = save_restore.standardize(masks, union.union)
-  presets = save_restore.standardize(presets)
+    # Retrieve previous information, if any.
+    masks = save_restore.standardize(masks, union.union)
+    presets = save_restore.standardize(presets)
 
-  # Create the dataset and model.
-  dataset = dataset_mnist.DatasetMnist(
-      mnist_location, train_order_seed=train_order_seed)
-  inputs, labels = dataset.placeholders
-  model = model_fc.ModelFc(
-      constants.HYPERPARAMETERS, inputs, labels, presets=presets, masks=masks)
+    # Create the dataset and model.
+    dataset = dataset_mnist.DatasetMnist(
+        mnist_location, train_order_seed=train_order_seed)
+    inputs, labels = dataset.placeholders
+    model = model_fc.ModelFc(
+        constants.HYPERPARAMETERS, inputs, labels, presets=presets, masks=masks)
 
-  # Train.
-  params = {'test_interval': 100, 'save_summaries': True, 'save_network': True}
-  trainer.train(tf.Session(), dataset, model, constants.OPTIMIZER_FN,
-                training_len, output_dir, **params)
+    # Train.
+    params = {'test_interval': 100, 'save_summaries': True, 'save_network': True}
+    trainer.train(tf.Session(), dataset, model, constants.OPTIMIZER_FN,
+                  training_len, output_dir, **params)
