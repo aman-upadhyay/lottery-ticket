@@ -23,7 +23,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import math
+import numpy as np
 
 
 class ModelBase(object):
@@ -141,11 +141,10 @@ class ModelBase(object):
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
 
-        # todo how to get prper input dims
         # Create the weights.
         weights = tf.get_variable(
             name=name + '_w',
-            shape=[kernel_size[0], kernel_size[1], inputs.shape[2], filters],
+            shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
             initializer=kernel_initializer)
 
         # Mask the layer as necessary.
@@ -153,7 +152,7 @@ class ModelBase(object):
             mask_initializer = tf.constant_initializer(self._masks[name])
             mask = tf.get_variable(
                 name=name + '_m',
-                shape=[kernel_size[0], kernel_size[1], inputs.shape[2], filters],
+                shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
                 initializer=mask_initializer,
                 trainable=False)
             weights = tf.multiply(weights, mask)
@@ -161,13 +160,17 @@ class ModelBase(object):
         self._weights[name] = weights
 
         # Compute the output
-        output_shape = ((inputs.shape[0] - kernel_size[0] + 1) // strides,
-                        (inputs.shape[1] - kernel_size[1] + 1) // strides, filters)
-        output = tf.placeholder(dtype=tf.float32, shape=output_shape)
+        output_shape = ((inputs.shape[1] - kernel_size[0] + 1) // strides,
+                        (inputs.shape[2] - kernel_size[1] + 1) // strides, filters)
+        output = np.empty(output_shape)
         for f in range(filters):
-            for x in range((inputs.shape[0] - kernel_size[0]) // strides):
-                for y in range((inputs.shape[1] - kernel_size[1]) // strides):
-                    output[x, y, f] = tf.multiply(inputs[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights)
+            for x in range((inputs.shape[1] - kernel_size[0]) // strides):
+                for y in range((inputs.shape[2] - kernel_size[1]) // strides):
+                    input_tmp = tf.reshape(inputs, [28, 28, 1])
+                    # todo setting an array element with a sequence
+                    output[x, y, f] = tf.math.reduce_sum(
+                        tf.multiply(input_tmp[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights[:,:,:,f]))
+        output = tf.convert_to_tensor(output, dtype=tf.float32)
 
         # Add bias if applicable.
         if use_bias:
