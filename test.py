@@ -1,3 +1,4 @@
 import numpy as np
 
-x = np.load("mnist_fc/data/mnist/x_test.npy")
+kernel = (3,4)
+print(kernel[0])

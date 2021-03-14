@@ -23,13 +23,14 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import math
 
 
 class ModelBase(object):
-  """A base class for all models used in lottery ticket experiments."""
+    """A base class for all models used in lottery ticket experiments."""
 
-  def __init__(self, presets=None, masks=None):
-    """Creates dictionaries for storing references to model parameters.
+    def __init__(self, presets=None, masks=None):
+        """Creates dictionaries for storing references to model parameters.
 
     Args:
       presets: A dictionary mapping strings to numpy arrays. Each key is the
@@ -39,115 +40,171 @@ class ModelBase(object):
         name of a weight tensor; each value is the corresponding mask (0 or 1
         values in each entry) that determines which weights have been pruned.
     """
-    self._masks = masks if masks else {}
-    self._presets = presets if presets else {}
-    self._weights = {}
+        self._masks = masks if masks else {}
+        self._presets = presets if presets else {}
+        self._weights = {}
 
-    self._train_summaries = None
-    self._test_summaries = None
-    self._validate_summaries = None
+        self._train_summaries = None
+        self._test_summaries = None
+        self._validate_summaries = None
 
-  @property
-  def loss(self):
-    return self._loss
+    @property
+    def loss(self):
+        return self._loss
 
-  @property
-  def train_summaries(self):
-    return self._train_summaries
+    @property
+    def train_summaries(self):
+        return self._train_summaries
 
-  @property
-  def test_summaries(self):
-    return self._test_summaries
+    @property
+    def test_summaries(self):
+        return self._test_summaries
 
-  @property
-  def validate_summaries(self):
-    return self._validate_summaries
+    @property
+    def validate_summaries(self):
+        return self._validate_summaries
 
-  @property
-  def masks(self):
-    return self._masks
+    @property
+    def masks(self):
+        return self._masks
 
-  @property
-  def presets(self):
-    return self._presets
+    @property
+    def presets(self):
+        return self._presets
 
-  @property
-  def weights(self):
-    return self._weights
+    @property
+    def weights(self):
+        return self._weights
 
-  def get_current_weights(self, sess):
-    output = {}
-    for k, v in self.weights.items():
-      output[k] = sess.run(v)
-    return output
+    def get_current_weights(self, sess):
+        output = {}
+        for k, v in self.weights.items():
+            output[k] = sess.run(v)
+        return output
 
-  def dense_layer(self,
-                  name,
-                  inputs,
-                  units,
-                  activation=None,
-                  use_bias=True,
-                  kernel_initializer=None):
-    """Mimics tf.dense_layer but masks weights and uses presets as necessary."""
-    # If there is a preset for this layer, use it.
-    if name in self._presets:
-      kernel_initializer = tf.constant_initializer(self._presets[name])
+    def dense_layer(self,
+                    name,
+                    inputs,
+                    units,
+                    activation=None,
+                    use_bias=True,
+                    kernel_initializer=None):
+        """Mimics tf.dense_layer but masks weights and uses presets as necessary."""
+        # If there is a preset for this layer, use it.
+        if name in self._presets:
+            kernel_initializer = tf.constant_initializer(self._presets[name])
 
-    # Create the weights.
-    weights = tf.get_variable(
-        name=name + '_w',
-        shape=[inputs.shape[1], units],
-        initializer=kernel_initializer)
+        # Create the weights.
+        weights = tf.get_variable(
+            name=name + '_w',
+            shape=[inputs.shape[1], units],
+            initializer=kernel_initializer)
 
-    # Mask the layer as necessary.
-    if name in self._masks:
-      mask_initializer = tf.constant_initializer(self._masks[name])
-      mask = tf.get_variable(
-          name=name + '_m',
-          shape=[inputs.shape[1], units],
-          initializer=mask_initializer,
-          trainable=False)
-      weights = tf.multiply(weights, mask)
+        # Mask the layer as necessary.
+        if name in self._masks:
+            mask_initializer = tf.constant_initializer(self._masks[name])
+            mask = tf.get_variable(
+                name=name + '_m',
+                shape=[inputs.shape[1], units],
+                initializer=mask_initializer,
+                trainable=False)
+            weights = tf.multiply(weights, mask)
 
-    self._weights[name] = weights
+        self._weights[name] = weights
 
-    # Compute the output.
-    output = tf.matmul(inputs, weights)
+        # Compute the output.
+        output = tf.matmul(inputs, weights)
 
-    # Add bias if applicable.
-    if use_bias:
-      bias = tf.get_variable(
-          name=name + '_b', shape=[units], initializer=tf.zeros_initializer())
-      output += bias
+        # Add bias if applicable.
+        if use_bias:
+            bias = tf.get_variable(
+                name=name + '_b', shape=[units], initializer=tf.zeros_initializer())
+            output += bias
 
-    # Activate.
-    if activation:
-      return activation(output)
-    else:
-      return output
+        # Activate.
+        if activation:
+            return activation(output)
+        else:
+            return output
 
-  def create_loss_and_accuracy(self, label_placeholder, output_logits):
-    """Creates loss and accuracy once a child class has created the network."""
-    # Compute cross-entropy loss and accuracy.
-    self._loss = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits_v2(
-            labels=label_placeholder, logits=output_logits))
-    accuracy = tf.reduce_mean(
-        tf.cast(
-            tf.equal(
-                tf.argmax(label_placeholder, 1),
-                tf.argmax(tf.nn.softmax(output_logits), 1)), tf.float32))
+    def conv2D(self,
+               name,
+               inputs,
+               filters,
+               kernel_size,
+               strides=1,
+               activation=None,
+               use_bias=True,
+               kernel_initializer=None):
+        """Mimics tf.COnv2D but masks weights and uses presets as necessary."""
+        # If there is a preset for this layer, use it.
+        if name in self._presets:
+            kernel_initializer = tf.constant_initializer(self._presets[name])
 
-    # Create summaries for loss and accuracy.
-    self._train_summaries = [
-        tf.summary.scalar('train_loss', self._loss),
-        tf.summary.scalar('train_accuracy', accuracy)
-    ]
-    self._test_summaries = [
-        tf.summary.scalar('test_loss', self._loss),
-        tf.summary.scalar('test_accuracy', accuracy)
-    ]
-    self._validate_summaries = [
-        tf.summary.scalar('validate_loss', self._loss),
-        tf.summary.scalar('validate_accuracy', accuracy)
-    ]
+        # Create the weights.
+        weights = tf.get_variable(
+            name=name + '_w',
+            shape=[kernel_size[0], kernel_size[1], inputs.shape[2], filters],
+            initializer=kernel_initializer)
+
+        # Mask the layer as necessary.
+        if name in self._masks:
+            mask_initializer = tf.constant_initializer(self._masks[name])
+            mask = tf.get_variable(
+                name=name + '_m',
+                shape=[kernel_size[0], kernel_size[1], inputs.shape[2], filters],
+                initializer=mask_initializer,
+                trainable=False)
+            weights = tf.multiply(weights, mask)
+
+        self._weights[name] = weights
+
+        # Compute the output
+        output_shape = (math.floor((inputs.shape[0] - kernel_size[0] + 1) / strides),
+                        math.floor((inputs.shape[1] - kernel_size[1] + 1) / strides), filters)
+        output = tf.placeholder(dtype=tf.float32, shape=output_shape)
+        for f in range(filters):
+            for x in range(math.floor((inputs.shape[0] - kernel_size[0]) / strides)):
+                for y in range(math.floor((inputs.shape[1] - kernel_size[1]) / strides)):
+                    output[x, y, f] = tf.matmul(inputs[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights)
+                    # todo test conv2d, error in matmul?
+
+        output = tf.matmul(inputs, weights)
+
+        # Add bias if applicable.
+        if use_bias:
+            bias = tf.get_variable(
+                name=name + '_b', shape=[filters], initializer=tf.zeros_initializer())
+            output += bias
+
+        # Activate.
+        if activation:
+            return activation(output)
+        else:
+            return output
+
+    def create_loss_and_accuracy(self, label_placeholder, output_logits):
+        """Creates loss and accuracy once a child class has created the network."""
+        # Compute cross-entropy loss and accuracy.
+        self._loss = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits_v2(
+                labels=label_placeholder, logits=output_logits))
+        accuracy = tf.reduce_mean(
+            tf.cast(
+                tf.equal(
+                    tf.argmax(label_placeholder, 1),
+                    tf.argmax(tf.nn.softmax(output_logits), 1)), tf.float32))
+
+        # Create summaries for loss and accuracy.
+        self._train_summaries = [
+            tf.summary.scalar('train_loss', self._loss),
+            tf.summary.scalar('train_accuracy', accuracy)
+        ]
+        self._test_summaries = [
+            tf.summary.scalar('test_loss', self._loss),
+            tf.summary.scalar('test_accuracy', accuracy)
+        ]
+        self._validate_summaries = [
+            tf.summary.scalar('validate_loss', self._loss),
+            tf.summary.scalar('validate_accuracy', accuracy)
+        ]
