@@ -56,7 +56,9 @@ class ModelConv2D(model_base.ModelBase):
                 activation,
                 kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=False))
         else:
-            current_layer = self.flatten()
+            current_layer = self.flatten(
+                'layer{}'.format(i),
+                current_layer)
 
     # Compute the loss and accuracy.
     self.create_loss_and_accuracy(label_placeholder, current_layer)
