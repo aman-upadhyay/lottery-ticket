@@ -166,10 +166,8 @@ class ModelBase(object):
         for f in range(filters):
             for x in range(math.floor((inputs.shape[0] - kernel_size[0]) / strides)):
                 for y in range(math.floor((inputs.shape[1] - kernel_size[1]) / strides)):
-                    output[x, y, f] = tf.matmul(inputs[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights)
-                    # todo test conv2d, error in matmul?
-
-        output = tf.matmul(inputs, weights)
+                    output[x, y, f] = tf.multiply(inputs[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights)
+                    # todo test conv2d
 
         # Add bias if applicable.
         if use_bias:
