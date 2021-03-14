@@ -56,6 +56,7 @@ def train(output_dir,
     def make_dataset():
         return dataset_mnist.DatasetMnist(
             mnist_location,
+            inc_dim=False,
             permute_labels=permute_labels,
             train_order_seed=train_order_seed)
 

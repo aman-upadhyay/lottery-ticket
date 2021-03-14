@@ -21,51 +21,57 @@ import numpy as np
 
 
 class DatasetMnist(dataset_base.DatasetBase):
-  """The MNIST dataset."""
+    """The MNIST dataset."""
 
-  def __init__(self,
-               mnist_location,
-               flatten=True,
-               permute_labels=False,
-               train_order_seed=None):
-    """Create an MNIST dataset object.
+    def __init__(self,
+                 mnist_location,
+                 inc_dim=False,
+                 flatten=True,
+                 permute_labels=False,
+                 train_order_seed=None):
+        """Create an MNIST dataset object.
 
     Args:
       mnist_location: The directory that contains MNIST as four npy files.
+      inc_dim: converts 2D to 3D for conv2D model
       flatten: Whether to convert the 28x28 MNIST images into a 1-dimensional
         vector with 784 entries.
       permute_labels: Whether to randomly permute the labels.
       train_order_seed: (optional) The random seed for shuffling the training
         set.
     """
-    mnist = save_restore.restore_network(mnist_location)
+        mnist = save_restore.restore_network(mnist_location)
 
-    x_train = mnist['x_train']
-    x_test = mnist['x_test']
-    y_train = mnist['y_train']
-    y_test = mnist['y_test']
+        x_train = mnist['x_train']
+        x_test = mnist['x_test']
+        y_train = mnist['y_train']
+        y_test = mnist['y_test']
 
-    if permute_labels:
-      # Reassign labels according to a random permutation of the labels.
-      permutation = np.random.permutation(10)
-      y_train = permutation[y_train]
-      y_test = permutation[y_test]
+        if inc_dim:
+            x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], x_train.shape[2], 1))
+            x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], x_test.shape[2], 1))
 
-    # Flatten x_train and x_test.
-    if flatten:
-      x_train = x_train.reshape((x_train.shape[0], -1))
-      x_test = x_test.reshape((x_test.shape[0], -1))
+        if permute_labels:
+            # Reassign labels according to a random permutation of the labels.
+            permutation = np.random.permutation(10)
+            y_train = permutation[y_train]
+            y_test = permutation[y_test]
 
-    # Normalize x_train and x_test.
-    x_train = keras.utils.normalize(x_train).astype(np.float32)
-    x_test = keras.utils.normalize(x_test).astype(np.float32)
+        # Flatten x_train and x_test.
+        if flatten:
+            x_train = x_train.reshape((x_train.shape[0], -1))
+            x_test = x_test.reshape((x_test.shape[0], -1))
 
-    # Convert y_train and y_test to one-hot.
-    y_train = keras.utils.to_categorical(y_train)
-    y_test = keras.utils.to_categorical(y_test)
+        # Normalize x_train and x_test.
+        x_train = keras.utils.normalize(x_train).astype(np.float32)
+        x_test = keras.utils.normalize(x_test).astype(np.float32)
 
-    # Prepare the dataset.
-    super(DatasetMnist, self).__init__(
-        (x_train, y_train),
-        64, (x_test, y_test),
-        train_order_seed=train_order_seed)
+        # Convert y_train and y_test to one-hot.
+        y_train = keras.utils.to_categorical(y_train)
+        y_test = keras.utils.to_categorical(y_test)
+
+        # Prepare the dataset.
+        super(DatasetMnist, self).__init__(
+            (x_train, y_train),
+            64, (x_test, y_test),
+            train_order_seed=train_order_seed)

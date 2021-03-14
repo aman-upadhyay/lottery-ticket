@@ -141,12 +141,7 @@ class ModelBase(object):
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
 
-        if inputs.ndim == 2:
-            inputs = inputs.reshape(inputs.shape[0], inputs.shape[1], 1)
-        elif inputs.ndim > 3:
-            print("Error: input image dim greater than 3")
-            exit()
-
+        # todo how to get prper input dims
         # Create the weights.
         weights = tf.get_variable(
             name=name + '_w',
@@ -164,19 +159,15 @@ class ModelBase(object):
             weights = tf.multiply(weights, mask)
 
         self._weights[name] = weights
-        print(weights.dtype)
-        print(inputs.dtype)
-
 
         # Compute the output
-        output_shape = (math.floor((inputs.shape[0] - kernel_size[0] + 1) / strides),
-                        math.floor((inputs.shape[1] - kernel_size[1] + 1) / strides), filters)
-        output = tf.placeholder(dtype=tf.float64, shape=output_shape)
+        output_shape = ((inputs.shape[0] - kernel_size[0] + 1) // strides,
+                        (inputs.shape[1] - kernel_size[1] + 1) // strides, filters)
+        output = tf.placeholder(dtype=tf.float32, shape=output_shape)
         for f in range(filters):
-            for x in range(math.floor((inputs.shape[0] - kernel_size[0]) / strides)):
-                for y in range(math.floor((inputs.shape[1] - kernel_size[1]) / strides)):
+            for x in range((inputs.shape[0] - kernel_size[0]) // strides):
+                for y in range((inputs.shape[1] - kernel_size[1]) // strides):
                     output[x, y, f] = tf.multiply(inputs[x:kernel_size[0] + x, y:kernel_size[1] + y, :], weights)
-                    # todo test conv2d
 
         # Add bias if applicable.
         if use_bias:

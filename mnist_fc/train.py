@@ -54,7 +54,7 @@ def train(output_dir,
 
     # Create the dataset and model.
     dataset = dataset_mnist.DatasetMnist(
-        mnist_location, train_order_seed=train_order_seed)
+        mnist_location, inc_dim=False, train_order_seed=train_order_seed)
     inputs, labels = dataset.placeholders
     model = model_fc.ModelFc(
         constants.HYPERPARAMETERS, inputs, labels, presets=presets, masks=masks)
