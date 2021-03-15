@@ -126,7 +126,7 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
       while True:
         try:
           iteration += 1
-          print("iteration = {}".format(iteration))
+          #print("iteration = {}".format(iteration))
 
           # End training if we have passed the iteration limit.
           if training_len[0] == 'iterations' and iteration > training_len[1]:

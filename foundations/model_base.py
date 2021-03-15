@@ -182,6 +182,24 @@ class ModelBase(object):
                 inputs):
         """Mimics tf.Flatten"""
 
+        # Create the weights.
+        weights = tf.get_variable(
+            name=name + '_w',
+            shape=[0],
+            initializer=None)
+
+        # Mask the layer as necessary.
+        if name in self._masks:
+            mask_initializer = tf.constant_initializer(self._masks[name])
+            mask = tf.get_variable(
+                name=name + '_m',
+                shape=[0],
+                initializer=mask_initializer,
+                trainable=False)
+            weights = tf.multiply(weights, mask)
+
+        self._weights[name] = weights
+
         output = tf.reshape(inputs, [tf.shape(inputs)[0],inputs.shape[1]*inputs.shape[2]*inputs.shape[3]])
 
 
