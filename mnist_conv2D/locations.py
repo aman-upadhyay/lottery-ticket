@@ -11,4 +11,4 @@ from __future__ import print_function
 # Originally from https://s3.amazonaws.com/img-datasets/mnist.npz
 MNIST_LOCATION = 'data/mnist'
 
-EXPERIMENT_PATH = 'mnist_fc_data'
+EXPERIMENT_PATH = 'mnist_conv2D_data'

@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+import os
 from datasets import dataset_mnist
 from foundations import experiment
 from foundations import model_conv2D
@@ -92,4 +93,12 @@ def train(output_dir,
         presets=save_restore.standardize(presets))
 
 
-train(constants.trial(2))
+x = 0
+while True:
+    path = "mnist_conv2D_data/trial{}".format(str(x))
+    isFile = os.path.isdir(path)
+    if isFile:
+        x = x + 1
+    else:
+        train(constants.trial(x))
+        exit()
