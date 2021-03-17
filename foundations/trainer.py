@@ -19,7 +19,7 @@ from foundations import save_restore
 import tensorflow as tf
 
 
-def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
+def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog,
           **params):
   """Train a model on a dataset.
 
@@ -116,17 +116,18 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
     while True:
       sess.run(dataset.train_initializer)
       epoch += 1
-      print("Epoch = {}".format(epoch))
+      prog.update()
+
 
       # End training if we have passed the epoch limit.
-      if training_len[0] == 'epochs' and epoch > training_len[1]:
+      if training_len[0] == 'epochs' and epoch >= training_len[1]:
         return
 
       # One training epoch.
       while True:
         try:
           iteration += 1
-          #print("iteration = {}".format(iteration))
+
 
           # End training if we have passed the iteration limit.
           if training_len[0] == 'iterations' and iteration > training_len[1]:
@@ -140,6 +141,7 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
           # Collect test and validation data if applicable.
           collect_test_summaries(iteration)
           collect_validate_summaries(iteration)
+
 
         # End of epoch handling.
         except tf.errors.OutOfRangeError:

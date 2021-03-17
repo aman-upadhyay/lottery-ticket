@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+import os
 from datasets import dataset_mnist
 from foundations import experiment
 from foundations import model_fc
@@ -18,7 +19,7 @@ from mnist_fc import constants
 def train(output_dir,
           mnist_location=constants.MNIST_LOCATION,
           training_len=constants.TRAINING_LEN,
-          iterations=30,
+          iterations=constants.prune_iteration,
           experiment_name='same_init',
           presets=None,
           permute_labels=False,
@@ -57,6 +58,7 @@ def train(output_dir,
         return dataset_mnist.DatasetMnist(
             mnist_location,
             inc_dim=False,
+            flatten=True,
             permute_labels=permute_labels,
             train_order_seed=train_order_seed)
 
@@ -74,6 +76,7 @@ def train(output_dir,
             model,
             constants.OPTIMIZER_FN,
             training_len,
+            prog=constants.pbar,
             output_dir=paths.run(output_dir, level, experiment_name),
             **params)
 
@@ -91,4 +94,12 @@ def train(output_dir,
         presets=save_restore.standardize(presets))
 
 
-train(constants.trial(1))
+x = 0
+while True:
+    path = "mnist_fc_data/trial{}".format(str(x))
+    isFile = os.path.isdir(path)
+    if isFile:
+        x = x + 1
+    else:
+        train(constants.trial(x))
+        exit()

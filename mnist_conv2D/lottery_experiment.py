@@ -19,7 +19,7 @@ from mnist_conv2D import constants
 def train(output_dir,
           mnist_location=constants.MNIST_LOCATION,
           training_len=constants.TRAINING_LEN,
-          iterations=30,
+          iterations=constants.prune_iteration,
           experiment_name='same_init',
           presets=None,
           permute_labels=False,
@@ -76,6 +76,7 @@ def train(output_dir,
             model,
             constants.OPTIMIZER_FN,
             training_len,
+            prog=constants.pbar,
             output_dir=paths.run(output_dir, level, experiment_name),
             **params)
 
@@ -101,4 +102,5 @@ while True:
         x = x + 1
     else:
         train(constants.trial(x))
+        constants.pbar.close()
         exit()

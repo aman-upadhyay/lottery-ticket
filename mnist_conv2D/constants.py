@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import functools
 import os
+from tqdm import tqdm
 from foundations import paths
 from mnist_conv2D import locations
 import tensorflow as tf
@@ -22,10 +23,13 @@ OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .1)
 
 PRUNE_PERCENTS = {'layer0': .2, 'layer1': .2, 'layer2': 0, 'layer3': .2, 'layer4': .1}
 
-TRAINING_LEN = ('iterations', 50000)
+prune_iteration = 30
+
+TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 
+pbar = tqdm(total=TRAINING_LEN[1]*prune_iteration, ascii=">*", desc="Pruning (1 iteration is 1 epoch)")
 
 def graph(category, filename):
     return os.path.join(EXPERIMENT_PATH, 'graphs', category, filename)
