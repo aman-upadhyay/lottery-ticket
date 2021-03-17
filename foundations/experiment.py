@@ -19,12 +19,13 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+from tqdm import tqdm
 import tensorflow as tf
 
 
 def experiment(make_dataset, make_model, train_model, prune_masks, iterations,
                presets=None):
-  """Run the lottery ticket experiment for the specified number of iterations.
+    """Run the lottery ticket experiment for the specified number of iterations.
 
   Args:
     make_dataset: A function that, when called with no arguments, will create an
@@ -47,29 +48,28 @@ def experiment(make_dataset, make_model, train_model, prune_masks, iterations,
       be initialized.
   """
 
-  # A helper function that trains the network once according to the behavior
-  # determined internally by the train_model function.
-  def train_once(iteration, presets=None, masks=None):
-    tf.reset_default_graph()
-    sess = tf.Session()
-    dataset = make_dataset()
-    input_tensor, label_tensor = dataset.placeholders
-    model = make_model(input_tensor, label_tensor, presets=presets, masks=masks)
-    return train_model(sess, iteration, dataset, model)
+    # A helper function that trains the network once according to the behavior
+    # determined internally by the train_model function.
+    def train_once(iteration, presets=None, masks=None):
+        tf.reset_default_graph()
+        sess = tf.Session()
+        dataset = make_dataset()
+        input_tensor, label_tensor = dataset.placeholders
+        model = make_model(input_tensor, label_tensor, presets=presets, masks=masks)
+        return train_model(sess, iteration, dataset, model)
 
-  # Run once normally.
-  initial, final = train_once(0, presets=presets)
+    # Run once normally.
+    initial, final = train_once(0, presets=presets)
 
-  # Create the initial masks with no weights pruned.
-  masks = {}
-  for k, v in initial.items():
-    masks[k] = np.ones(v.shape)
+    # Create the initial masks with no weights pruned.
+    masks = {}
+    for k, v in initial.items():
+        masks[k] = np.ones(v.shape)
 
-  # Begin the training loop.
-  for iteration in range(1, iterations + 1):
-    # Prune the network.
-    masks = prune_masks(masks, final)
-    print("Prune iteration = {}".format(iteration))
+    # Begin the training loop.
+    for iteration in tqdm(range(1, iterations + 1), ascii="=>", desc="Pruning"):
+        # Prune the network.
+        masks = prune_masks(masks, final)
 
-    # Train the network again.
-    _, final = train_once(iteration, presets=initial, masks=masks)
+        # Train the network again.
+        _, final = train_once(iteration, presets=initial, masks=masks)

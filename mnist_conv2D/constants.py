@@ -22,7 +22,7 @@ OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .1)
 
 PRUNE_PERCENTS = {'layer0': .2, 'layer1': .2, 'layer2': 0, 'layer3': .2, 'layer4': .1}
 
-TRAINING_LEN = ('iterations', 50000)
+TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 

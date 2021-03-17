@@ -21,7 +21,7 @@ import tensorflow as tf
 
 def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
           **params):
-  """Train a model on a dataset.
+    """Train a model on a dataset.
 
   Training continues until training_len iterations or epochs have taken place.
 
@@ -46,29 +46,29 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
       A dictionary containing the weights before training and the weights after
       training.
   """
-  # Create initial session parameters.
-  optimize = optimizer_fn().minimize(model.loss)
-  sess.run(tf.global_variables_initializer())
-  initial_weights = model.get_current_weights(sess)
+    # Create initial session parameters.
+    optimize = optimizer_fn().minimize(model.loss)
+    sess.run(tf.global_variables_initializer())
+    initial_weights = model.get_current_weights(sess)
 
-  train_handle = dataset.get_train_handle(sess)
-  test_handle = dataset.get_test_handle(sess)
-  validate_handle = dataset.get_validate_handle(sess)
+    train_handle = dataset.get_train_handle(sess)
+    test_handle = dataset.get_test_handle(sess)
+    validate_handle = dataset.get_validate_handle(sess)
 
-  # Optional operations to perform before training.
-  if params.get('save_summaries', False):
-    writer = tf.summary.FileWriter(paths.summaries(output_dir))
-    train_file = tf.gfile.GFile(paths.log(output_dir, 'train'), 'w')
-    test_file = tf.gfile.GFile(paths.log(output_dir, 'test'), 'w')
-    validate_file = tf.gfile.GFile(paths.log(output_dir, 'validate'), 'w')
+    # Optional operations to perform before training.
+    if params.get('save_summaries', False):
+        writer = tf.summary.FileWriter(paths.summaries(output_dir))
+        train_file = tf.gfile.GFile(paths.log(output_dir, 'train'), 'w')
+        test_file = tf.gfile.GFile(paths.log(output_dir, 'test'), 'w')
+        validate_file = tf.gfile.GFile(paths.log(output_dir, 'validate'), 'w')
 
-  if params.get('save_network', False):
-    save_restore.save_network(paths.initial(output_dir), initial_weights)
-    save_restore.save_network(paths.masks(output_dir), model.masks)
+    if params.get('save_network', False):
+        save_restore.save_network(paths.initial(output_dir), initial_weights)
+        save_restore.save_network(paths.masks(output_dir), model.masks)
 
-  # Helper functions to collect and record summaries.
-  def record_summaries(iteration, records, fp):
-    """Records summaries obtained from evaluating the network.
+    # Helper functions to collect and record summaries.
+    def record_summaries(iteration, records, fp):
+        """Records summaries obtained from evaluating the network.
 
     Args:
       iteration: The current training iteration as an integer.
@@ -76,87 +76,87 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir,
       fp: A file to which the records should be logged in an easier-to-parse
         format than the tensorflow summary files.
     """
+        if params.get('save_summaries', False):
+            log = ['iteration', str(iteration)]
+            for record in records:
+                # Log to tensorflow summaries for tensorboard.
+                writer.add_summary(record, iteration)
+
+                # Log to text file for convenience.
+                summary_proto = tf.Summary()
+                summary_proto.ParseFromString(record)
+                value = summary_proto.value[0]
+                log += [value.tag, str(value.simple_value)]
+            fp.write(','.join(log) + '\n')
+
+    def collect_test_summaries(iteration):
+        if (params.get('save_summaries', False) and
+                'test_interval' in params and
+                iteration % params['test_interval'] == 0):
+            sess.run(dataset.test_initializer)
+            records = sess.run(model.test_summaries, {dataset.handle: test_handle})
+            record_summaries(iteration, records, test_file)
+
+    def collect_validate_summaries(iteration):
+        if (params.get('save_summaries', False) and
+                'validate_interval' in params and
+                iteration % params['validate_interval'] == 0):
+            sess.run(dataset.validate_initializer)
+            records = sess.run(model.validate_summaries,
+                               {dataset.handle: validate_handle})
+            record_summaries(iteration, records, validate_file)
+
+    # Train for the specified number of epochs. This behavior is encapsulated
+    # in a function so that it is possible to break out of multiple loops
+    # simultaneously.
+    def training_loop():
+        """The main training loop encapsulated in a function."""
+        iteration = 0
+        epoch = 0
+        while True:
+            sess.run(dataset.train_initializer)
+            epoch += 1
+            print("Epoch = {}".format(epoch))
+
+            # End training if we have passed the epoch limit.
+            if training_len[0] == 'epochs' and epoch > training_len[1]:
+                return
+
+            # One training epoch.
+            while True:
+                try:
+                    iteration += 1
+                    # print("iteration = {}".format(iteration))
+
+                    # End training if we have passed the iteration limit.
+                    if training_len[0] == 'iterations' and iteration > training_len[1]:
+                        return
+
+                    # Train.
+                    records = sess.run([optimize] + model.train_summaries,
+                                       {dataset.handle: train_handle})[1:]
+                    record_summaries(iteration, records, train_file)
+
+                    # Collect test and validation data if applicable.
+                    collect_test_summaries(iteration)
+                    collect_validate_summaries(iteration)
+
+                # End of epoch handling.
+                except tf.errors.OutOfRangeError:
+                    break
+
+    # Run the training loop.
+    training_loop()
+
+    # Clean up.
     if params.get('save_summaries', False):
-      log = ['iteration', str(iteration)]
-      for record in records:
-        # Log to tensorflow summaries for tensorboard.
-        writer.add_summary(record, iteration)
+        train_file.close()
+        test_file.close()
+        validate_file.close()
 
-        # Log to text file for convenience.
-        summary_proto = tf.Summary()
-        summary_proto.ParseFromString(record)
-        value = summary_proto.value[0]
-        log += [value.tag, str(value.simple_value)]
-      fp.write(','.join(log) + '\n')
+    # Retrieve the final weights of the model.
+    final_weights = model.get_current_weights(sess)
+    if params.get('save_network', False):
+        save_restore.save_network(paths.final(output_dir), final_weights)
 
-  def collect_test_summaries(iteration):
-    if (params.get('save_summaries', False) and
-        'test_interval' in params and
-        iteration % params['test_interval'] == 0):
-      sess.run(dataset.test_initializer)
-      records = sess.run(model.test_summaries, {dataset.handle: test_handle})
-      record_summaries(iteration, records, test_file)
-
-  def collect_validate_summaries(iteration):
-    if (params.get('save_summaries', False) and
-        'validate_interval' in params and
-        iteration % params['validate_interval'] == 0):
-      sess.run(dataset.validate_initializer)
-      records = sess.run(model.validate_summaries,
-                         {dataset.handle: validate_handle})
-      record_summaries(iteration, records, validate_file)
-
-  # Train for the specified number of epochs. This behavior is encapsulated
-  # in a function so that it is possible to break out of multiple loops
-  # simultaneously.
-  def training_loop():
-    """The main training loop encapsulated in a function."""
-    iteration = 0
-    epoch = 0
-    while True:
-      sess.run(dataset.train_initializer)
-      epoch += 1
-      print("Epoch = {}".format(epoch))
-
-      # End training if we have passed the epoch limit.
-      if training_len[0] == 'epochs' and epoch > training_len[1]:
-        return
-
-      # One training epoch.
-      while True:
-        try:
-          iteration += 1
-          #print("iteration = {}".format(iteration))
-
-          # End training if we have passed the iteration limit.
-          if training_len[0] == 'iterations' and iteration > training_len[1]:
-            return
-
-          # Train.
-          records = sess.run([optimize] + model.train_summaries,
-                             {dataset.handle: train_handle})[1:]
-          record_summaries(iteration, records, train_file)
-
-          # Collect test and validation data if applicable.
-          collect_test_summaries(iteration)
-          collect_validate_summaries(iteration)
-
-        # End of epoch handling.
-        except tf.errors.OutOfRangeError:
-          break
-
-  # Run the training loop.
-  training_loop()
-
-  # Clean up.
-  if params.get('save_summaries', False):
-    train_file.close()
-    test_file.close()
-    validate_file.close()
-
-  # Retrieve the final weights of the model.
-  final_weights = model.get_current_weights(sess)
-  if params.get('save_network', False):
-    save_restore.save_network(paths.final(output_dir), final_weights)
-
-  return initial_weights, final_weights
+    return initial_weights, final_weights

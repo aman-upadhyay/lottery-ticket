@@ -1,6 +1,9 @@
-import numpy as np
+import tensorflow as tf
 
-p = np.load("mnist_conv2D/mnist_conv2D_data/trial1/2/same_init/final/layer3.npy")
-m = np.load("mnist_conv2D/mnist_conv2D_data/trial1/2/same_init/masks/layer3.npy")
-print(m)
-print(p)
+if tf.test.gpu_device_name():
+
+    print('Default GPU Device:{}'.format(tf.test.gpu_device_name()))
+
+else:
+
+    print("Please install GPU version of TF")
