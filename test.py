@@ -1,9 +1,18 @@
-import tensorflow as tf
+import numpy as np
 
-if tf.test.gpu_device_name():
 
-    print('Default GPU Device:{}'.format(tf.test.gpu_device_name()))
+def weight():
+    w = np.load("mnist_conv2D/mnist_conv2D_data/trial3/10/same_init/final/layer3.npy")
+    print(w)
+    print(w.shape)
 
-else:
 
-    print("Please install GPU version of TF")
+def no_of_weights_left(x):
+    y=100
+    print(0,x)
+    for h in range(1,30):
+        y=y-0.2*y
+        print(h,(y*x)/100)
+
+
+no_of_weights_left(300)
