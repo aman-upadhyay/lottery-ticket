@@ -95,7 +95,6 @@ class ModelBase(object):
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
 
-
         # Create the weights.
         weights = tf.get_variable(
             name=name + '_w',
@@ -176,7 +175,55 @@ class ModelBase(object):
             return activation(output)
         else:
             return output
+    '''
+    def dws_conv2D(self,
+                   name,
+                   inputs,
+                   kernel_size,
+                   filters,
+                   strides=1,
+                   activation=None,
+                   use_bias=True,
+                   kernel_initializer=None):
+        """Mimics Depth-wise seperable Conv2D but masks weights and uses presets as necessary."""
+        # If there is a preset for this layer, use it.
+        if name in self._presets:
+            kernel_initializer = tf.constant_initializer(self._presets[name])
 
+        # Create the weights.
+        weights = tf.get_variable(
+            name=name + '_w',
+            shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+            initializer=kernel_initializer)
+
+        # Mask the layer as necessary.
+        if name in self._masks:
+            mask_initializer = tf.constant_initializer(self._masks[name])
+            mask = tf.get_variable(
+                name=name + '_m',
+                shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+                initializer=mask_initializer,
+                trainable=False)
+            weights = tf.multiply(weights, mask)
+
+        self._weights[name] = weights
+
+        # Compute the output
+        output = convolution(input=inputs, filter=weights, padding='VALID', strides=1, dilation_rate=None, name=None,
+                             data_format=None, filters=None, dilations=None)
+
+        # Add bias if applicable.
+        if use_bias:
+            bias = tf.get_variable(
+                name=name + '_b', shape=[filters], initializer=tf.zeros_initializer())
+            output += bias
+
+        # Activate.
+        if activation:
+            return activation(output)
+        else:
+            return output
+    '''
     def flatten(self,
                 name,
                 inputs):
@@ -200,8 +247,7 @@ class ModelBase(object):
 
         self._weights[name] = weights
 
-        output = tf.reshape(inputs, [tf.shape(inputs)[0],inputs.shape[1]*inputs.shape[2]*inputs.shape[3]])
-
+        output = tf.reshape(inputs, [tf.shape(inputs)[0], inputs.shape[1] * inputs.shape[2] * inputs.shape[3]])
 
         return output
 
