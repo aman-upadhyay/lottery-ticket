@@ -175,7 +175,7 @@ class ModelBase(object):
             return activation(output)
         else:
             return output
-    '''
+
     def dws_conv2D(self,
                    name,
                    inputs,
@@ -185,7 +185,7 @@ class ModelBase(object):
                    activation=None,
                    use_bias=True,
                    kernel_initializer=None):
-        """Mimics Depth-wise seperable Conv2D but masks weights and uses presets as necessary."""
+        """Mimics Depth-wise separable Conv2D but masks weights and uses presets as necessary."""
         # If there is a preset for this layer, use it.
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
@@ -193,7 +193,7 @@ class ModelBase(object):
         # Create the weights.
         weights = tf.get_variable(
             name=name + '_w',
-            shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+            shape=[kernel_size[0] + 1, kernel_size[1], inputs.shape[3], filters],
             initializer=kernel_initializer)
 
         # Mask the layer as necessary.
@@ -201,7 +201,7 @@ class ModelBase(object):
             mask_initializer = tf.constant_initializer(self._masks[name])
             mask = tf.get_variable(
                 name=name + '_m',
-                shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+                shape=[kernel_size[0] + 1, kernel_size[1], inputs.shape[3], filters],
                 initializer=mask_initializer,
                 trainable=False)
             weights = tf.multiply(weights, mask)
@@ -209,8 +209,13 @@ class ModelBase(object):
         self._weights[name] = weights
 
         # Compute the output
-        output = convolution(input=inputs, filter=weights, padding='VALID', strides=1, dilation_rate=None, name=None,
-                             data_format=None, filters=None, dilations=None)
+        for x in range(inputs.shape[3]):
+            output = convolution(input=tf.slice(inputs, [0, 0, 0, 0, ],[, kernel_size[1], inputs.shape[3],filters]), filter=tf.slice(weights, [0, 0, 0, 0, ],
+                                                               [kernel_size[0], kernel_size[1], inputs.shape[3],
+                                                                filters]),
+                                 padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None,
+                                 filters=None,
+                                 dilations=None)
 
         # Add bias if applicable.
         if use_bias:
@@ -223,7 +228,7 @@ class ModelBase(object):
             return activation(output)
         else:
             return output
-    '''
+
     def flatten(self,
                 name,
                 inputs):
