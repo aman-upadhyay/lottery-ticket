@@ -209,13 +209,23 @@ class ModelBase(object):
         self._weights[name] = weights
 
         # Compute the output
+        sep = []
+        fil = []
         for x in range(inputs.shape[3]):
-            output = convolution(input=tf.slice(inputs, [0, 0, 0, 0, ],[, kernel_size[1], inputs.shape[3],filters]), filter=tf.slice(weights, [0, 0, 0, 0, ],
-                                                               [kernel_size[0], kernel_size[1], inputs.shape[3],
-                                                                filters]),
-                                 padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None,
-                                 filters=None,
-                                 dilations=None)
+            sep.append(convolution(
+                input=tf.reshape(inputs[:, :, :, x], (tf.shape(inputs)[0], inputs.shape[1], inputs.shape[2], 1)),
+                filter=tf.reshape(weights[:kernel_size[0], :, x, 0], (kernel_size[0], kernel_size[1], 1, 1)),
+                padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None, filters=None,
+                dilations=None))
+        stacked_sep = tf.stack(sep, axis=3)
+        stacked_sep = tf.reshape(stacked_sep, (tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
+        for x in range(filters):
+            fil.append(convolution(input=stacked_sep,
+                                   filter=tf.reshape(weights[-1, -1, :, x], (1, 1, inputs.shape[3], 1)),
+                                   padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None,
+                                   filters=None, dilations=None))
+        output = tf.stack(fil, axis=3)
+        output = tf.reshape(output, (tf.shape(output)[0], output.shape[1], output.shape[2], output.shape[3]))
 
         # Add bias if applicable.
         if use_bias:

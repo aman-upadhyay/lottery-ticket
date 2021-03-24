@@ -8,28 +8,24 @@ import functools
 import os
 from tqdm import tqdm
 from foundations import paths
-from mnist_conv2D import locations
+from mnist_MobileNet import locations
 import tensorflow as tf
 
-HYPERPARAMETERS = {
-    'layers': [(2, (3, 3), 4, 1, tf.nn.relu), (2, (3, 3), 2, 1, tf.nn.relu), (0, 0, 0, 0, 0), (1, 0, 100, 0, tf.nn.relu),
-               (1, 0, 10, 0, None)]}
+HYPERPARAMETERS = {}
 
 MNIST_LOCATION = locations.MNIST_LOCATION
 
-# FASHIONMNIST_LOCATION = locations.FASHIONMNIST_LOCATION
-
 OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .1)
 
-PRUNE_PERCENTS = {'layer0': .2, 'layer1': .2, 'layer2': 0, 'layer3': .2, 'layer4': .1}
+PRUNE_PERCENTS = {'layer0': .2}
 
-prune_iteration = 30
+prune_iteration = 3
 
 TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 
-pbar = tqdm(total=TRAINING_LEN[1]*prune_iteration, ascii=">*", desc="Pruning (1 iteration is 1 epoch)")
+pbar = tqdm(total=TRAINING_LEN[1]*prune_iteration, ascii="=>", desc="Pruning (1 iteration is 1 epoch)")
 
 def graph(category, filename):
     return os.path.join(EXPERIMENT_PATH, 'graphs', category, filename)
