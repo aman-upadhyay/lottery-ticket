@@ -190,7 +190,8 @@ class ModelBase(object):
         if name in self._presets:
             kernel_initializer = tf.constant_initializer(self._presets[name])
 
-        # Create the weights.
+        # Create the weights. (Number of weights initialized more than required, this was done because of shape
+        # constraints. But these extra weights dont participate in training so should not effect computation time.
         weights = tf.get_variable(
             name=name + '_w',
             shape=[kernel_size[0] + 1, kernel_size[1], inputs.shape[3], filters],
@@ -218,7 +219,8 @@ class ModelBase(object):
                 padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None, filters=None,
                 dilations=None))
         stacked_sep = tf.stack(sep, axis=3)
-        stacked_sep = tf.reshape(stacked_sep, (tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
+        stacked_sep = tf.reshape(stacked_sep, (
+        tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
         for x in range(filters):
             fil.append(convolution(input=stacked_sep,
                                    filter=tf.reshape(weights[-1, -1, :, x], (1, 1, inputs.shape[3], 1)),

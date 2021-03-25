@@ -16,16 +16,16 @@ HYPERPARAMETERS = {}
 MNIST_LOCATION = locations.MNIST_LOCATION
 
 OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .1)
-
-PRUNE_PERCENTS = {'layer0': .2}
+# skip BN, avg pooling, skip layers
+PRUNE_PERCENTS = {'layer0': .2, 'layer1': 0.2,'layer2': 0.2}
 
 prune_iteration = 3
 
-TRAINING_LEN = ('epochs', 50)
+TRAINING_LEN = ('epochs', 5)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 
-pbar = tqdm(total=TRAINING_LEN[1]*prune_iteration, ascii="=>", desc="Pruning (1 iteration is 1 epoch)")
+pbar = tqdm(total=TRAINING_LEN[1]*(prune_iteration+1), ascii="=>", desc="Pruning (1 iteration is 1 epoch)")
 
 def graph(category, filename):
     return os.path.join(EXPERIMENT_PATH, 'graphs', category, filename)

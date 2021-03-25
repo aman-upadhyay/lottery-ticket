@@ -38,18 +38,26 @@ class MobileNet(model_base.ModelBase):
         # Build the network layer by layer.
         current_layer = input_placeholder
         current_layer = self.dws_conv2D(
-            'layer{}'.format(1),
+            'layer{}'.format(0),
             current_layer,
-            (3,3),
+            (3, 3),
             2,
             1,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
                 uniform=False))
-        current_layer = self.flatten(
-            'layer{}'.format(2),
-            current_layer)
+        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
+        current_layer = tf.keras.layers.AveragePooling2D(pool_size=(2, 2))(current_layer)
+        current_layer = self.dws_conv2D(
+            'layer{}'.format(1),
+            current_layer,
+            (3, 3),
+            2,
+            1,
+            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                uniform=False))
+        current_layer = tf.keras.layers.Flatten()(current_layer)
         current_layer = self.dense_layer(
-            'layer{}'.format(3),
+            'layer{}'.format(2),
             current_layer,
             10,
             None,
