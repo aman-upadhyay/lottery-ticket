@@ -161,7 +161,7 @@ class ModelBase(object):
         self._weights[name] = weights
 
         # Compute the output
-        output = convolution(input=inputs, filter=weights, padding='VALID', strides=1, dilation_rate=None, name=None,
+        output = convolution(input=inputs, filter=weights, padding='VALID', strides=strides, dilation_rate=None, name=None,
                              data_format=None, filters=None, dilations=None)
 
         # Add bias if applicable.
@@ -220,7 +220,7 @@ class ModelBase(object):
                 dilations=None))
         stacked_sep = tf.stack(sep, axis=3)
         stacked_sep = tf.reshape(stacked_sep, (
-        tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
+            tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
         for x in range(filters):
             fil.append(convolution(input=stacked_sep,
                                    filter=tf.reshape(weights[-1, -1, :, x], (1, 1, inputs.shape[3], 1)),
@@ -228,6 +228,62 @@ class ModelBase(object):
                                    filters=None, dilations=None))
         output = tf.stack(fil, axis=3)
         output = tf.reshape(output, (tf.shape(output)[0], output.shape[1], output.shape[2], output.shape[3]))
+
+        # Add bias if applicable.
+        if use_bias:
+            bias = tf.get_variable(
+                name=name + '_b', shape=[filters], initializer=tf.zeros_initializer())
+            output += bias
+
+        # Activate.
+        if activation:
+            return activation(output)
+        else:
+            return output
+
+    def dw_conv2D(self,
+                  name,
+                  inputs,
+                  kernel_size,
+                  filters=1,
+                  strides=1,
+                  activation=None,
+                  use_bias=True,
+                  kernel_initializer=None):
+        """Mimics Depth-wise Conv2D but masks weights and uses presets as necessary."""
+        # If there is a preset for this layer, use it.
+        if name in self._presets:
+            kernel_initializer = tf.constant_initializer(self._presets[name])
+
+        weights = tf.get_variable(
+            name=name + '_w',
+            shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+            initializer=kernel_initializer)
+
+        # Mask the layer as necessary.
+        if name in self._masks:
+            mask_initializer = tf.constant_initializer(self._masks[name])
+            mask = tf.get_variable(
+                name=name + '_m',
+                shape=[kernel_size[0], kernel_size[1], inputs.shape[3], filters],
+                initializer=mask_initializer,
+                trainable=False)
+            weights = tf.multiply(weights, mask)
+
+        self._weights[name] = weights
+
+        # Compute the output
+        sep = []
+        for x in range(inputs.shape[3]):
+            sep.append(convolution(
+                input=tf.reshape(inputs[:, :, :, x], (tf.shape(inputs)[0], inputs.shape[1], inputs.shape[2], 1)),
+                filter=tf.reshape(weights[:, :, x, :], (kernel_size[0], kernel_size[1], 1, 1)),
+                padding='VALID', strides=strides, dilation_rate=None, name=None, data_format=None, filters=None,
+                dilations=None))
+        stacked_sep = tf.stack(sep, axis=3)
+        stacked_sep = tf.reshape(stacked_sep, (
+            tf.shape(stacked_sep)[0], stacked_sep.shape[1], stacked_sep.shape[2], stacked_sep.shape[3]))
+        output = stacked_sep
 
         # Add bias if applicable.
         if use_bias:
