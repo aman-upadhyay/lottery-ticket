@@ -1,4 +1,4 @@
-"""Constants for Conv2D MNIST experiment."""
+"""Constants for Conv2D CIFAR experiment."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -8,12 +8,12 @@ import functools
 import os
 from tqdm import tqdm
 from foundations import paths
-from mnist_MobileNet import locations
+from cifar_MobileNet import locations
 import tensorflow as tf
 
 HYPERPARAMETERS = {}
 
-MNIST_LOCATION = locations.MNIST_LOCATION
+CIFAR_LOCATION = locations.CIFAR_LOCATION
 
 OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .1)
 # skip BN, avg pooling, skip layers

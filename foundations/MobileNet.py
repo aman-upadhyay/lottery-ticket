@@ -186,7 +186,7 @@ class MobileNet(model_base.ModelBase):
             'layer14',
             current_layer,
             (1, 1),
-            64,
+            512,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
@@ -206,7 +206,7 @@ class MobileNet(model_base.ModelBase):
             'layer16',
             current_layer,
             (1, 1),
-            64,
+            512,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
@@ -226,7 +226,7 @@ class MobileNet(model_base.ModelBase):
             'layer18',
             current_layer,
             (1,1),
-            64,
+            512,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
@@ -246,7 +246,7 @@ class MobileNet(model_base.ModelBase):
             'layer20',
             current_layer,
             (1,1),
-            64,
+            512,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
@@ -266,7 +266,28 @@ class MobileNet(model_base.ModelBase):
             'layer22',
             current_layer,
             (1,1),
-            64,
+            512,
+            strides=1,
+            activation=None,
+            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                uniform=False))
+        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
+        current_layer = tf.nn.relu(current_layer)
+        current_layer = self.dw_conv2D(
+            'layer23',
+            current_layer,
+            kernel_size=(3, 3),
+            strides=2,
+            activation=None,
+            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                uniform=False))
+        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
+        current_layer = tf.nn.relu(current_layer)
+        current_layer = self.conv2D(
+            'layer24',
+            current_layer,
+            (1, 1),
+            1024,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(
@@ -287,7 +308,7 @@ class MobileNet(model_base.ModelBase):
             'layer26',
             current_layer,
             (1, 1),
-            64,
+            1024,
             strides=1,
             activation=None,
             kernel_initializer=tf.contrib.layers.xavier_initializer(

@@ -17,16 +17,5 @@ def no_of_weights_left(x):
 
 
 # no_of_weights_left(300)
-kernel_initializer = tf.contrib.layers.xavier_initializer(uniform=False)
-weights1 = tf.get_variable(
-    name='w1',
-    shape=[3, 3, 3, 4],
-    initializer=kernel_initializer)
-
-weights2 = tf.get_variable(
-    name='w2',
-    shape=[1, 1, 3, 0],
-    initializer=kernel_initializer)
-
-print(weights1, weights2)
-tf.concat([weights1, weights2], axis=2)
+x= np.load('cifar_MobileNet/data/CIFAR/x_train.npy')
+print(x.shape)
