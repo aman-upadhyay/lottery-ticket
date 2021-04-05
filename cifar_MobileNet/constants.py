@@ -23,9 +23,9 @@ PRUNE_PERCENTS = {'layer0': .2, 'layer1': 0.2, 'layer2': 0.2, 'layer3': 0.2, 'la
                   'layer18': 0.2, 'layer19': 0.2, 'layer20': 0.2, 'layer21': 0.2, 'layer22': 0.2, 'layer23': 0.2,
                   'layer24': 0.2, 'layer25': 0.2, 'layer26': 0.2}
 
-prune_iteration = 3
+prune_iteration = 8
 
-TRAINING_LEN = ('epochs', 5)
+TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 

@@ -66,8 +66,6 @@ class DatasetCIFAR(dataset_base.DatasetBase):
         x_train = keras.utils.normalize(x_train).astype(np.float32)
         x_test = keras.utils.normalize(x_test).astype(np.float32)
 
-        x_train = x_train.resize((x_train.shape[0], 224, 224, 3))
-        x_test = x_test.resize((x_test.shape[0], 224, 224, 3))
 
         # Convert y_train and y_test to one-hot.
         y_train = keras.utils.to_categorical(y_train)
