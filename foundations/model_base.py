@@ -134,6 +134,7 @@ class ModelBase(object):
                kernel_size,
                filters,
                strides=1,
+               pad='SAME',
                activation=None,
                use_bias=True,
                kernel_initializer=None):
@@ -161,7 +162,7 @@ class ModelBase(object):
         self._weights[name] = weights
 
         # Compute the output
-        output = convolution(input=inputs, filter=weights, padding='VALID', strides=strides, dilation_rate=None, name=None,
+        output = convolution(input=inputs, filter=weights, padding=pad, strides=strides, dilation_rate=None, name=None,
                              data_format=None, filters=None, dilations=None)
 
         # Add bias if applicable.
@@ -182,6 +183,7 @@ class ModelBase(object):
                    kernel_size,
                    filters,
                    strides=1,
+                   pad='SAME',
                    activation=None,
                    use_bias=True,
                    kernel_initializer=None):
@@ -216,7 +218,7 @@ class ModelBase(object):
             sep.append(convolution(
                 input=tf.reshape(inputs[:, :, :, x], (tf.shape(inputs)[0], inputs.shape[1], inputs.shape[2], 1)),
                 filter=tf.reshape(weights[:kernel_size[0], :, x, 0], (kernel_size[0], kernel_size[1], 1, 1)),
-                padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None, filters=None,
+                padding=pad, strides=1, dilation_rate=None, name=None, data_format=None, filters=None,
                 dilations=None))
         stacked_sep = tf.stack(sep, axis=3)
         stacked_sep = tf.reshape(stacked_sep, (
@@ -224,7 +226,7 @@ class ModelBase(object):
         for x in range(filters):
             fil.append(convolution(input=stacked_sep,
                                    filter=tf.reshape(weights[-1, -1, :, x], (1, 1, inputs.shape[3], 1)),
-                                   padding='VALID', strides=1, dilation_rate=None, name=None, data_format=None,
+                                   padding=pad, strides=1, dilation_rate=None, name=None, data_format=None,
                                    filters=None, dilations=None))
         output = tf.stack(fil, axis=3)
         output = tf.reshape(output, (tf.shape(output)[0], output.shape[1], output.shape[2], output.shape[3]))
@@ -247,6 +249,7 @@ class ModelBase(object):
                   kernel_size,
                   filters=1,
                   strides=1,
+                  pad='SAME',
                   activation=None,
                   use_bias=True,
                   kernel_initializer=None):
@@ -278,7 +281,7 @@ class ModelBase(object):
             sep.append(convolution(
                 input=tf.reshape(inputs[:, :, :, x], (tf.shape(inputs)[0], inputs.shape[1], inputs.shape[2], 1)),
                 filter=tf.reshape(weights[:, :, x, :], (kernel_size[0], kernel_size[1], 1, 1)),
-                padding='VALID', strides=strides, dilation_rate=None, name=None, data_format=None, filters=None,
+                padding=pad, strides=strides, dilation_rate=None, name=None, data_format=None, filters=None,
                 dilations=None))
         stacked_sep = tf.stack(sep, axis=3)
         stacked_sep = tf.reshape(stacked_sep, (
