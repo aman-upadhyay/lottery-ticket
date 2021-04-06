@@ -1,4 +1,4 @@
-"""The lottery ticket experiment for Lenet 300-100 trained on CIFAR."""
+"""The lottery ticket experiment for MobileNet trained on CIFAR."""
 
 from __future__ import absolute_import
 from __future__ import division
