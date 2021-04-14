@@ -1,5 +1,8 @@
+import time
+
 import numpy as np
-import tensorflow as tf
+#import tensorflow as tf
+from tqdm import tqdm
 
 
 def weight():
@@ -17,5 +20,9 @@ def no_of_weights_left(x):
 
 
 # no_of_weights_left(300)
-x= np.load('cifar_MobileNet/data/CIFAR/x_train.npy')
-print(x.shape)
+
+pbar = tqdm(total=100, ascii=".>=", desc="Pruning (1 iteration is 1 epoch)")
+for x in range(100):
+    pbar.update()
+    time.sleep(0.1)
+pbar.close()

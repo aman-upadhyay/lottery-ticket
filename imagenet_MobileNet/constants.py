@@ -29,7 +29,7 @@ TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 
-pbar = tqdm(total=TRAINING_LEN[1] * (prune_iteration + 1), ascii="=>", desc="Pruning (1 iteration is 1 epoch)")
+pbar = tqdm(total=TRAINING_LEN[1] * (prune_iteration + 1), ascii=".>=", desc="Pruning (1 iteration is 1 epoch)")
 
 
 def graph(category, filename):

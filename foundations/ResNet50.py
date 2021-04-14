@@ -27,302 +27,120 @@ class ResNet50(model_base.ModelBase):
         # Call parent constructor.
         super(ResNet50, self).__init__(presets=presets, masks=masks)
 
+        # clubbing some layers for future use
+        def res_identity(x, filters, i):
+            # renet block where dimension doesnot change.
+            # The skip connection is just simple identity conncection
+            # we will have 3 blocks and then input will be added
+
+            x_skip = x  # this will be used for addition with the residual block
+            f1, f2 = filters
+
+            # first block
+            x = self.conv2D('layer{}'.format(str(i + 1)), x, filters=f1, kernel_size=(1, 1), strides=(1, 1),
+                            pad='VALID',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.nn.relu(x)
+
+            # second block # bottleneck (but size kept same with padding)
+            x = self.conv2D('layer{}'.format(str(i + 2)), x, filters=f1, kernel_size=(3, 3), strides=(1, 1), pad='SAME',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.nn.relu(x)
+
+            # third block activation used after adding the input
+            x = self.conv2D('layer{}'.format(str(i + 3)), x, filters=f2, kernel_size=(1, 1), strides=(1, 1),
+                            pad='VALID',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            x = tf.keras.layers.BatchNormalization()(x)
+            # x = tf.nn.relu(x)
+
+            # add the input
+            x = tf.keras.layers.Add()([x, x_skip])
+            x = tf.nn.relu(x)
+
+            return x
+
+        def res_conv(x, s, filters, i):
+            '''
+            here the input size changes'''
+            x_skip = x
+            f1, f2 = filters
+
+            # first block
+            x = self.conv2D('layer{}'.format(str(i + 1)), x, filters=f1, kernel_size=(1, 1), strides=(s, s),
+                            pad='VALID',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            # when s = 2 then it is like downsizing the feature map
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.nn.relu(x)
+
+            # second block
+            x = self.conv2D('layer{}'.format(str(i + 2)), x, filters=f1, kernel_size=(3, 3), strides=(1, 1), pad='SAME',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.nn.relu(x)
+
+            # third block
+            x = self.conv2D('layer{}'.format(str(i + 3)), x, filters=f2, kernel_size=(1, 1), strides=(1, 1),
+                            pad='VALID',
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                uniform=False), activation=None)
+            x = tf.keras.layers.BatchNormalization()(x)
+
+            # shortcut
+            x_skip = self.conv2D('layer{}'.format(str(i + 4)), x_skip, filters=f2, kernel_size=(1, 1), strides=(s, s),
+                                 pad='VALID',
+                                 kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                     uniform=False), activation=None)
+            x_skip = tf.keras.layers.BatchNormalization()(x_skip)
+
+            # add
+            x = tf.keras.layers.Add()([x, x_skip])
+            x = tf.nn.relu(x)
+
+            return x
+
         # Build the network layer by layer.
         current_layer = input_placeholder
-        current_layer = self.conv2D(
-            'layer0',
-            current_layer,
-            (7, 7),
-            64,
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
+        current_layer = tf.keras.layers.ZeroPadding2D(padding=(3, 3))(current_layer)
+        current_layer = self.conv2D('layer0',
+                                    current_layer,
+                                    kernel_size=(7, 7),
+                                    strides=2,
+                                    filters=64,
+                                    activation=None,
+                                    kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=False))
         current_layer = tf.keras.layers.BatchNormalization()(current_layer)
         current_layer = tf.nn.relu(current_layer)
         current_layer = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer1',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer2',
-            current_layer,
-            (1, 1),
-            64,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer3',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer4',
-            current_layer,
-            (1, 1),
-            128,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer5',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer6',
-            current_layer,
-            (1, 1),
-            128,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer7',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer8',
-            current_layer,
-            (1, 1),
-            256,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer9',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer10',
-            current_layer,
-            (1, 1),
-            256,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer11',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer12',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer13',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer14',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer15',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer16',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer17',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer18',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer19',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer20',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer21',
-            current_layer,
-            kernel_size=(3, 3),
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer22',
-            current_layer,
-            (1, 1),
-            512,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer23',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer24',
-            current_layer,
-            (1, 1),
-            1024,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.dw_conv2D(
-            'layer25',
-            current_layer,
-            kernel_size=(3, 3),
-            strides=2,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = self.conv2D(
-            'layer26',
-            current_layer,
-            (1, 1),
-            1024,
-            strides=1,
-            activation=None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                uniform=False))
-        current_layer = tf.keras.layers.BatchNormalization()(current_layer)
-        current_layer = tf.nn.relu(current_layer)
-        current_layer = tf.keras.layers.AveragePooling2D(pool_size=(current_layer.shape[1], current_layer.shape[2]))(
-            current_layer)
-        current_layer = tf.keras.layers.Flatten()(current_layer)
-        current_layer = self.dense_layer(
-            'layer27',
-            current_layer,
-            1000,
-            None,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=False))
-        current_layer = self.dense_layer(
-            'layer28',
-            current_layer,
-            10,
-            tf.nn.softmax,
-            kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=False))
+        current_layer = res_conv(current_layer, s=1, filters=(64, 256), i=0)
+        current_layer = res_identity(current_layer, filters=(64, 256), i=4)
+        current_layer = res_identity(current_layer, filters=(64, 256), i=7)
+        current_layer = res_conv(current_layer, s=2, filters=(128, 512), i=10)
+        current_layer = res_identity(current_layer, filters=(128, 512), i=14)
+        current_layer = res_identity(current_layer, filters=(128, 512), i=17)
+        current_layer = res_identity(current_layer, filters=(128, 512), i=20)
+        current_layer = res_conv(current_layer, s=2, filters=(256, 1024), i=23)
+        current_layer = res_identity(current_layer, filters=(256, 1024), i=27)
+        current_layer = res_identity(current_layer, filters=(256, 1024), i=30)
+        current_layer = res_identity(current_layer, filters=(256, 1024), i=33)
+        current_layer = res_identity(current_layer, filters=(256, 1024), i=36)
+        current_layer = res_identity(current_layer, filters=(256, 1024), i=39)
+        current_layer = res_conv(current_layer, s=2, filters=(512, 2048), i=42)
+        current_layer = res_identity(current_layer, filters=(512, 2048), i=46)
+        current_layer = res_identity(current_layer, filters=(512, 2048), i=49)
+        current_layer = tf.keras.layers.AveragePooling2D((2, 2), padding='same')(current_layer)
 
+        current_layer = tf.keras.layers.Flatten()(current_layer)
+        current_layer = self.dense_layer('layer53', current_layer, 100, activation=tf.nn.softmax,
+                                         kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                             uniform=False))  # multi-class
         # Compute the loss and accuracy.
         self.create_loss_and_accuracy(label_placeholder, current_layer)
