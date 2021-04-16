@@ -21,8 +21,12 @@ def no_of_weights_left(x):
 
 # no_of_weights_left(300)
 
-pbar = tqdm(total=100, ascii=".>=", desc="Pruning (1 iteration is 1 epoch)")
-for x in range(100):
-    pbar.update()
-    time.sleep(0.1)
-pbar.close()
+count = 0
+
+def layer_name():
+    global count
+    count = count + 1
+    return "layer{}".format(str(count - 1))
+
+print(layer_name())
+print(layer_name())

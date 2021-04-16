@@ -23,14 +23,11 @@ PRUNE_PERCENTS = {'layer0': 0, 'layer1': 0.2, 'layer2': 0.2, 'layer3': 0.2, 'lay
                   'layer18': 0.2, 'layer19': 0.2, 'layer20': 0.2, 'layer21': 0.2, 'layer22': 0.2, 'layer23': 0.2,
                   'layer24': 0.2, 'layer25': 0.2, 'layer26': 0.2, 'layer27': 0.2, 'layer28': 0.2, 'layer29': 0.2,
                   'layer30': 0.2, 'layer31': 0.2, 'layer32': 0.2, 'layer33': 0.2, 'layer34': 0.2, 'layer35': 0.2,
-                  'layer36': 0.2, 'layer37': 0.2, 'layer38': 0.2, 'layer39': 0.2, 'layer40': 0.2, 'layer41': 0.2,
-                  'layer42': 0.2, 'layer43': 0.2, 'layer44': 0.2, 'layer45': 0.2, 'layer46': 0.2, 'layer47': 0.2,
-                  'layer48': 0.2, 'layer49': 0.2, 'layer50': 0.2, 'layer51': 0.2, 'layer52': 0.2, 'layer53': 0.2,
-                  'layer54': 0}
+                  'layer36': 0.2, 'layer37': 0}
 
 prune_iteration = 8
 
-TRAINING_LEN = ('epochs', 1000)
+TRAINING_LEN = ('epochs', 50)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 

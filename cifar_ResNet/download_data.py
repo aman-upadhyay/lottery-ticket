@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 
-from keras.datasets import cifar100 as CIFAR
+from keras.datasets import cifar10 as CIFAR
 from foundations import save_restore
 from cifar_ResNet import locations
 

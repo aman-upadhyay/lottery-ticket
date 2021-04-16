@@ -8,7 +8,7 @@ import functools
 import os
 from datasets import dataset_cifar
 from foundations import experiment
-from foundations import ResNet50
+from foundations import ResNet34
 from foundations import paths
 from foundations import pruning
 from foundations import save_restore
@@ -51,7 +51,7 @@ def train(output_dir,
       to the network.
   """
 
-    make_model = functools.partial(ResNet50.ResNet50)
+    make_model = functools.partial(ResNet34.ResNet34)
 
     # Define model and dataset functions.
     def make_dataset():
