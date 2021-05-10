@@ -157,6 +157,7 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog, k_
   training_loop()
 
   # Clean up.
+
   if params.get('save_summaries', False):
     train_file.close()
     test_file.close()
