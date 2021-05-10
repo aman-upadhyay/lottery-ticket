@@ -153,5 +153,7 @@ class ResNet34(model_base.ModelBase):
         current_layer = self.dense_layer(layer_name(), current_layer, 10, activation=tf.nn.softmax,
                                          kernel_initializer=tf.contrib.layers.xavier_initializer(
                                              uniform=False))  # multi-class
+        global count
+        count = 0
         # Compute the loss and accuracy.
         self.create_loss_and_accuracy(label_placeholder, current_layer)

@@ -74,5 +74,5 @@ class DatasetCIFAR(dataset_base.DatasetBase):
         # Prepare the dataset.
         super(DatasetCIFAR, self).__init__(
             (x_train, y_train),
-            128, (x_test, y_test),
+            256, (x_test, y_test),
             train_order_seed=train_order_seed)

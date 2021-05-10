@@ -15,19 +15,21 @@ HYPERPARAMETERS = {}
 
 CIFAR_LOCATION = locations.CIFAR_LOCATION
 
-OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .01)
+OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .001)
 # skip BN, avg pooling, skip layers
-PRUNE_PERCENTS = {'layer0': 0, 'layer1': 0.2, 'layer2': 0.2, 'layer3': 0.2, 'layer4': 0.2, 'layer5': 0.2,
-                  'layer6': 0.2, 'layer7': 0.2, 'layer8': 0.2, 'layer9': 0.2, 'layer10': 0.2, 'layer11': 0.2,
+PRUNE_PERCENTS = {'layer0': 0.0, 'layer1': 0.2, 'layer2': 0.2, 'layer3': 0.2, 'layer4': 0.2, 'layer5': 0.2,
+                  'layer6': 0.2, 'layer7': 0.2, 'layer8': 0.2, 'layer9': 0.2, 'layer10': 0.0, 'layer11': 0.2,
                   'layer12': 0.2, 'layer13': 0.2, 'layer14': 0.2, 'layer15': 0.2, 'layer16': 0.2, 'layer17': 0.2,
-                  'layer18': 0.2, 'layer19': 0.2, 'layer20': 0.2, 'layer21': 0.2, 'layer22': 0.2, 'layer23': 0.2,
+                  'layer18': 0.2, 'layer19': 0.0, 'layer20': 0.2, 'layer21': 0.2, 'layer22': 0.2, 'layer23': 0.2,
                   'layer24': 0.2, 'layer25': 0.2, 'layer26': 0.2, 'layer27': 0.2, 'layer28': 0.2, 'layer29': 0.2,
-                  'layer30': 0.2, 'layer31': 0.2, 'layer32': 0.2, 'layer33': 0.2, 'layer34': 0.2, 'layer35': 0.2,
-                  'layer36': 0.2, 'layer37': 0}
+                  'layer30': 0.2, 'layer31': 0.2, 'layer32': 0.0, 'layer33': 0.2, 'layer34': 0.2, 'layer35': 0.2,
+                  'layer36': 0.2, 'layer37': 0.0}
 
 prune_iteration = 8
 
-TRAINING_LEN = ('epochs', 50)
+k_init = 25
+
+TRAINING_LEN = ('epochs', 100)
 
 EXPERIMENT_PATH = locations.EXPERIMENT_PATH
 

@@ -58,7 +58,7 @@ def experiment(make_dataset, make_model, train_model, prune_masks, iterations,
     return train_model(sess, iteration, dataset, model)
 
   # Run once normally.
-  initial, final = train_once(0, presets=presets)
+  initial, final, k_weights = train_once(0, presets=presets)
 
   # Create the initial masks with no weights pruned.
   masks = {}
@@ -72,4 +72,4 @@ def experiment(make_dataset, make_model, train_model, prune_masks, iterations,
     print("\nPrune iteration = {}".format(iteration))
 
     # Train the network again.
-    _, final = train_once(iteration, presets=initial, masks=masks)
+    _, final = train_once(iteration, presets=k_weights, masks=masks)

@@ -77,6 +77,7 @@ def train(output_dir,
             constants.OPTIMIZER_FN,
             training_len,
             prog=constants.pbar,
+            k_init=constants.k_init,
             output_dir=paths.run(output_dir, level, experiment_name),
             **params)
 

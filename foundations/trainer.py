@@ -19,7 +19,7 @@ from foundations import save_restore
 import tensorflow as tf
 
 
-def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog,
+def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog, k_init,
           **params):
   """Train a model on a dataset.
 
@@ -50,6 +50,7 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog,
   optimize = optimizer_fn().minimize(model.loss)
   sess.run(tf.global_variables_initializer())
   initial_weights = model.get_current_weights(sess)
+  k_weights = 0
 
   train_handle = dataset.get_train_handle(sess)
   test_handle = dataset.get_test_handle(sess)
@@ -142,6 +143,11 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog,
           collect_test_summaries(iteration)
           collect_validate_summaries(iteration)
 
+          # Retrieve the k_init weights of the model.
+          if training_len[0] == k_init:
+            global k_weights
+            k_weights = model.get_current_weights(sess)
+
 
         # End of epoch handling.
         except tf.errors.OutOfRangeError:
@@ -161,4 +167,4 @@ def train(sess, dataset, model, optimizer_fn, training_len, output_dir, prog,
   if params.get('save_network', False):
     save_restore.save_network(paths.final(output_dir), final_weights)
 
-  return initial_weights, final_weights
+  return initial_weights, final_weights, k_weights
