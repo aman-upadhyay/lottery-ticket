@@ -1,6 +1,7 @@
 import time
 
 import numpy as np
+import sys
 #import tensorflow as tf
 from tqdm import tqdm
 
@@ -18,15 +19,9 @@ def no_of_weights_left(x):
         y = y - 0.2 * y
         print(h, (y * x) / 100)
 
-
+np.set_printoptions(threshold=sys.maxsize)
 # no_of_weights_left(300)
 
-count = 0
+x = np.load("cifar_ResNet/CIFAR_ResNet_data/trial1/1/same_init/final/layer1.npy")
 
-def layer_name():
-    global count
-    count = count + 1
-    return "layer{}".format(str(count - 1))
-
-print(layer_name())
-print(layer_name())
+print(x)

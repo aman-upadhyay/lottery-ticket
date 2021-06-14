@@ -15,7 +15,7 @@ HYPERPARAMETERS = {}
 
 CIFAR_LOCATION = locations.CIFAR_LOCATION
 
-OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .001)
+OPTIMIZER_FN = functools.partial(tf.train.GradientDescentOptimizer, .01)
 # skip BN, avg pooling, skip layers
 PRUNE_PERCENTS = {'layer0': 0.0, 'layer1': 0.2, 'layer2': 0.2, 'layer3': 0.2, 'layer4': 0.2, 'layer5': 0.2,
                   'layer6': 0.2, 'layer7': 0.2, 'layer8': 0.2, 'layer9': 0.2, 'layer10': 0.0, 'layer11': 0.2,

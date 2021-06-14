@@ -72,4 +72,4 @@ def experiment(make_dataset, make_model, train_model, prune_masks, iterations,
     print("\nPrune iteration = {}".format(iteration))
 
     # Train the network again.
-    _, final = train_once(iteration, presets=k_weights, masks=masks)
+    _, final, __ = train_once(iteration, presets=k_weights, masks=masks)

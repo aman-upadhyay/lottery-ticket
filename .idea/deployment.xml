@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" serverName="lingraj" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="aman@10.10.0.181:22">
+      <paths name="lingraj">
         <serverdata>
           <mappings>
             <mapping deploy="/media/data6TB/aman/lottery-ticket" local="$PROJECT_DIR$" web="/" />
